@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pickleball Rotations</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; }
+:root {
+  --primary: #2d6a4f; --primary-light: #40916c; --primary-bg: #d8f3dc;
+  --bg: #f8faf8; --card: #fff; --border: #dee2e6;
+  --text: #1a1a2e; --muted: #6c757d; --danger: #c0392b; --radius: 8px;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg); color: var(--text); margin: 0; padding: 20px; line-height: 1.5;
+}
+.container { max-width: 720px; margin: 0 auto; }
+h1 { color: var(--primary); margin: 0 0 4px; font-size: 1.8rem; }
+h2 { color: var(--primary); margin: 0 0 4px; }
+.subtitle { color: var(--muted); margin: 0 0 24px; }
+.form-section { margin-bottom: 16px; }
+.form-section label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
+.form-hint { font-weight: 400; color: var(--muted); font-size: 0.82rem; margin-left: 4px; }
+textarea, input[type="number"] {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border);
+  border-radius: var(--radius); font-size: 1rem; font-family: inherit;
+}
+textarea:focus, input:focus {
+  outline: none; border-color: var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(45,106,79,0.1);
+}
+.form-row { display: flex; gap: 16px; }
+.form-row .form-section { flex: 1; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; min-height: 32px; }
+.chip {
+  padding: 6px 14px; border: 1.5px solid var(--border); border-radius: 20px;
+  background: white; cursor: pointer; font-size: 0.85rem;
+  transition: all 0.15s; user-select: none; -webkit-tap-highlight-color: transparent;
+}
+.chip:hover { border-color: var(--primary-light); }
+.chip.selected { background: var(--primary); color: white; border-color: var(--primary); }
+.btn-primary, .btn-secondary {
+  padding: 12px 24px; border: none; border-radius: var(--radius);
+  font-size: 1rem; font-weight: 600; cursor: pointer; transition: background 0.15s;
+}
+.btn-primary { background: var(--primary); color: white; width: 100%; }
+.btn-primary:hover { background: var(--primary-light); }
+.btn-secondary { background: #e9ecef; color: var(--text); }
+.btn-secondary:hover { background: var(--border); }
+.hidden { display: none !important; }
+.error {
+  background: #fff5f5; border: 1px solid var(--danger); color: var(--danger);
+  padding: 12px; border-radius: var(--radius); margin-bottom: 16px; font-size: 0.9rem;
+}
+.round-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); margin-bottom: 12px; overflow: hidden;
+}
+.round-header {
+  background: var(--primary); color: white; padding: 8px 16px;
+  font-weight: 600; font-size: 0.95rem;
+}
+.court-row {
+  display: flex; align-items: center; padding: 10px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+.court-row:last-child { border-bottom: none; }
+.court-label { font-weight: 600; color: var(--primary); min-width: 72px; font-size: 0.85rem; }
+.team { font-weight: 500; }
+.vs { color: var(--muted); margin: 0 10px; font-size: 0.85rem; }
+.sit-out-row {
+  padding: 10px 16px; color: var(--muted); font-size: 0.88rem;
+  border-top: 1px solid var(--border); background: #fafafa;
+}
+.stats-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 20px; margin: 24px 0;
+}
+.stats-card h3 { margin: 0 0 12px; color: var(--primary); font-size: 1rem; }
+.stats-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.stats-table th, .stats-table td { text-align: left; padding: 6px 12px; border-bottom: 1px solid #f0f0f0; }
+.stats-table th { font-size: 0.75rem; text-transform: uppercase; color: var(--muted); letter-spacing: 0.5px; }
+.stat-line { color: var(--muted); font-size: 0.88rem; margin: 4px 0; }
+.results-actions { display: flex; gap: 12px; margin-top: 24px; padding-bottom: 40px; }
+.results-actions button { flex: 1; }
+
+@media (max-width: 500px) {
+  .form-row { flex-direction: column; gap: 0; }
+  .court-row { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .court-label { min-width: auto; }
+}
+@media print {
+  body { background: white; padding: 0; font-size: 11pt; }
+  #setup, .results-actions { display: none !important; }
+  .round-card { break-inside: avoid; border: 1px solid #999; margin-bottom: 8px; }
+  .round-header { background: #333 !important; color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 5px 12px; }
+  .court-row { padding: 6px 12px; }
+  .sit-out-row { padding: 6px 12px; }
+  .stats-card { break-inside: avoid; }
+  .container { max-width: none; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div id="setup">
+    <h1>Pickleball Rotations</h1>
+    <p class="subtitle">Generate fair court assignments that maximize player diversity</p>
+
+    <div class="form-section">
+      <label for="players">Player Names <span class="form-hint">(one per line)</span></label>
+      <textarea id="players" rows="6" placeholder="Alice&#10;Bob&#10;Carol&#10;Dave&#10;Eve&#10;Frank&#10;Grace&#10;Henry"></textarea>
+    </div>
+
+    <div class="form-row">
+      <div class="form-section">
+        <label for="courts">Courts</label>
+        <input type="number" id="courts" min="1" value="2">
+      </div>
+      <div class="form-section">
+        <label for="games">Games</label>
+        <input type="number" id="games" min="1" value="6">
+      </div>
+    </div>
+
+    <div id="sit-out-section" class="hidden">
+      <div class="form-section">
+        <label>Arriving late <span class="form-hint">(sit out first game)</span></label>
+        <div id="first-chips" class="chips"></div>
+      </div>
+      <div class="form-section">
+        <label>Leaving early <span class="form-hint">(sit out last game)</span></label>
+        <div id="last-chips" class="chips"></div>
+      </div>
+    </div>
+
+    <div id="error" class="error hidden"></div>
+    <button id="generate-btn" class="btn-primary">Generate Rotations</button>
+  </div>
+
+  <div id="results" class="hidden">
+    <h2>Rotation Schedule</h2>
+    <p id="results-info" class="subtitle"></p>
+    <div id="rounds"></div>
+    <div id="stats"></div>
+    <div class="results-actions">
+      <button id="back-btn" class="btn-secondary">Back</button>
+      <button id="regen-btn" class="btn-secondary">Regenerate</button>
+      <button id="print-btn" class="btn-primary">Print</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── Utilities ───────────────────────────────────────────────
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function debounce(fn, ms) {
+  let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); };
+}
+
+function parseNames(text) {
+  return text.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+}
+
+// ─── Algorithm ───────────────────────────────────────────────
+
+function generateSchedule(n, numCourts, numGames, firstForced, lastForced) {
+  const ATTEMPTS = 30;
+  let best = null, bestScore = Infinity;
+  for (let a = 0; a < ATTEMPTS; a++) {
+    const result = generateOne(n, numCourts, numGames, firstForced, lastForced);
+    const score = scoreSchedule(result, n);
+    if (score < bestScore) { bestScore = score; best = result; }
+  }
+  return best;
+}
+
+function generateOne(n, numCourts, numGames, firstForced, lastForced) {
+  const tm = Array.from({ length: n }, () => new Array(n).fill(0));
+  const op = Array.from({ length: n }, () => new Array(n).fill(0));
+  const sitCount = new Array(n).fill(0);
+  const lastSat = new Array(n).fill(-100);
+
+  // Pre-credit last-round forced sit-outs so they sit out less in the middle
+  if (numGames > 1) {
+    for (const idx of lastForced) sitCount[idx]++;
+  }
+
+  const rounds = [];
+  for (let r = 0; r < numGames; r++) {
+    let forced = [];
+    if (r === 0) forced = [...firstForced];
+    if (r === numGames - 1) {
+      if (numGames > 1) {
+        for (const idx of lastForced) sitCount[idx]--;
+      }
+      forced = [...new Set([...forced, ...lastForced])];
+    }
+
+    const baseNeed = n - numCourts * 4;
+    let numSitOut = Math.max(baseNeed, forced.length);
+    // Ensure active count is divisible by 4
+    let active = n - numSitOut;
+    while (active % 4 !== 0 && active > 0) { active--; numSitOut++; }
+
+    const sitOuts = pickSitOuts(n, sitCount, lastSat, numSitOut, forced, r);
+    for (const idx of sitOuts) { sitCount[idx]++; lastSat[idx] = r; }
+
+    const activePlayers = [];
+    for (let i = 0; i < n; i++) if (!sitOuts.has(i)) activePlayers.push(i);
+
+    const courts = bestAssignment(activePlayers, active / 4, tm, op);
+
+    // Update matrices
+    for (const c of courts) {
+      const [a, b] = c.t1, [x, y] = c.t2;
+      tm[a][b]++; tm[b][a]++;
+      tm[x][y]++; tm[y][x]++;
+      op[a][x]++; op[x][a]++; op[a][y]++; op[y][a]++;
+      op[b][x]++; op[x][b]++; op[b][y]++; op[y][b]++;
+    }
+
+    rounds.push({ courts, sitOuts: [...sitOuts] });
+  }
+
+  return { rounds, tm, op, sitCount };
+}
+
+function pickSitOuts(n, sitCount, lastSat, needed, forced, round) {
+  const out = new Set(forced);
+  if (out.size >= needed) return out;
+
+  const remaining = needed - out.size;
+  const candidates = [];
+  for (let i = 0; i < n; i++) if (!out.has(i)) candidates.push(i);
+
+  // Group by sit-out count, then prefer those who sat out longest ago
+  const groups = {};
+  for (const c of candidates) {
+    const k = sitCount[c];
+    if (!groups[k]) groups[k] = [];
+    groups[k].push(c);
+  }
+  const keys = Object.keys(groups).map(Number).sort((a, b) => a - b);
+
+  let added = 0;
+  for (const k of keys) {
+    if (added >= remaining) break;
+    const g = groups[k];
+    // Sort by last-sat-out round (ascending), add randomness for ties
+    g.sort((a, b) => {
+      const d = lastSat[a] - lastSat[b];
+      return d !== 0 ? d : Math.random() - 0.5;
+    });
+    for (const p of g) {
+      if (added >= remaining) break;
+      out.add(p); added++;
+    }
+  }
+  return out;
+}
+
+function bestAssignment(active, numCourts, tm, op) {
+  if (numCourts === 0 || active.length === 0) return [];
+  const TRIALS = 500;
+  let best = null, bestS = Infinity;
+
+  for (let t = 0; t < TRIALS; t++) {
+    const sh = shuffle([...active]);
+    let score = 0;
+    const assign = [];
+    for (let c = 0; c < numCourts; c++) {
+      const g = sh.slice(c * 4, c * 4 + 4);
+      const [split, s] = bestSplit(g, tm, op);
+      assign.push(split);
+      score += s;
+    }
+    if (score < bestS) { bestS = score; best = assign; }
+  }
+  return best;
+}
+
+function bestSplit(g, tm, op) {
+  const [a, b, c, d] = g;
+  const splits = [
+    { t1: [a, b], t2: [c, d] },
+    { t1: [a, c], t2: [b, d] },
+    { t1: [a, d], t2: [b, c] },
+  ];
+  let best = null, bestS = Infinity;
+  for (const sp of splits) {
+    const [p, q] = sp.t1, [x, y] = sp.t2;
+    const s = (tm[p][q] + tm[x][y]) * 2 +
+              op[p][x] + op[p][y] + op[q][x] + op[q][y];
+    if (s < bestS) { bestS = s; best = sp; }
+  }
+  return [best, bestS];
+}
+
+function scoreSchedule(result, n) {
+  const { tm, op, sitCount } = result;
+  let score = 0;
+  for (let i = 0; i < n; i++)
+    for (let j = i + 1; j < n; j++)
+      score += tm[i][j] ** 2 + op[i][j] ** 2;
+  const avg = sitCount.reduce((a, b) => a + b, 0) / n;
+  for (let i = 0; i < n; i++) score += (sitCount[i] - avg) ** 2 * 10;
+  return score;
+}
+
+// ─── UI ──────────────────────────────────────────────────────
+
+const $players  = document.getElementById('players');
+const $courts   = document.getElementById('courts');
+const $games    = document.getElementById('games');
+const $sitSec   = document.getElementById('sit-out-section');
+const $error    = document.getElementById('error');
+const $setup    = document.getElementById('setup');
+const $results  = document.getElementById('results');
+
+function updateChips() {
+  const names = parseNames($players.value);
+  const courts = parseInt($courts.value) || 1;
+  const sitOut = names.length - courts * 4;
+
+  if (sitOut <= 0 || names.length < 4) {
+    $sitSec.classList.add('hidden');
+    return;
+  }
+  $sitSec.classList.remove('hidden');
+  renderChips('first-chips', names);
+  renderChips('last-chips', names);
+}
+
+function renderChips(id, names) {
+  const el = document.getElementById(id);
+  const prev = new Set([...el.querySelectorAll('.chip.selected')].map(c => c.textContent));
+  el.innerHTML = '';
+  names.forEach((name, i) => {
+    const chip = document.createElement('button');
+    chip.className = 'chip' + (prev.has(name) ? ' selected' : '');
+    chip.textContent = name;
+    chip.type = 'button';
+    chip.dataset.index = i;
+    chip.addEventListener('click', () => chip.classList.toggle('selected'));
+    el.appendChild(chip);
+  });
+}
+
+function getSelected(id) {
+  return [...document.querySelectorAll(`#${id} .chip.selected`)].map(c => parseInt(c.dataset.index));
+}
+
+function showError(msg) {
+  $error.textContent = msg;
+  $error.classList.remove('hidden');
+}
+
+function validate(names, courts, games) {
+  if (names.length < 4) return 'Enter at least 4 player names.';
+  if (courts < 1) return 'Need at least 1 court.';
+  if (games < 1) return 'Need at least 1 game.';
+  if (names.length < courts * 4) return `Need at least ${courts * 4} players for ${courts} court${courts > 1 ? 's' : ''}.`;
+  const dupes = names.filter((n, i) => names.indexOf(n) !== i);
+  if (dupes.length > 0) return `Duplicate name: "${dupes[0]}". Each player must have a unique name.`;
+  return null;
+}
+
+let lastConfig = null;
+
+function generate() {
+  $error.classList.add('hidden');
+  const names = parseNames($players.value);
+  const courts = parseInt($courts.value) || 1;
+  const games = parseInt($games.value) || 5;
+
+  const err = validate(names, courts, games);
+  if (err) { showError(err); return; }
+
+  const firstForced = getSelected('first-chips');
+  const lastForced = getSelected('last-chips');
+  lastConfig = { names, courts, games, firstForced, lastForced };
+
+  const schedule = generateSchedule(names.length, courts, games, firstForced, lastForced);
+  showResults(schedule, names, courts, games);
+}
+
+function regenerate() {
+  if (!lastConfig) return;
+  const { names, courts, games, firstForced, lastForced } = lastConfig;
+  const schedule = generateSchedule(names.length, courts, games, firstForced, lastForced);
+  showResults(schedule, names, courts, games);
+}
+
+function showResults(schedule, names, courts, games) {
+  $setup.classList.add('hidden');
+  $results.classList.remove('hidden');
+  document.getElementById('results-info').textContent =
+    `${names.length} Players \u2022 ${courts} Court${courts > 1 ? 's' : ''} \u2022 ${games} Game${games > 1 ? 's' : ''}`;
+  renderRounds(schedule, names);
+  renderStats(schedule, names);
+  window.scrollTo(0, 0);
+}
+
+function renderRounds(schedule, names) {
+  const el = document.getElementById('rounds');
+  el.innerHTML = '';
+  for (let r = 0; r < schedule.rounds.length; r++) {
+    const round = schedule.rounds[r];
+    const card = document.createElement('div');
+    card.className = 'round-card';
+
+    const hdr = document.createElement('div');
+    hdr.className = 'round-header';
+    hdr.textContent = `Round ${r + 1}`;
+    card.appendChild(hdr);
+
+    for (let c = 0; c < round.courts.length; c++) {
+      const ct = round.courts[c];
+      const row = document.createElement('div');
+      row.className = 'court-row';
+      row.innerHTML =
+        `<span class="court-label">Court ${c + 1}</span>` +
+        `<span><span class="team">${ct.t1.map(i => names[i]).join(' &amp; ')}</span>` +
+        `<span class="vs">vs</span>` +
+        `<span class="team">${ct.t2.map(i => names[i]).join(' &amp; ')}</span></span>`;
+      card.appendChild(row);
+    }
+
+    if (round.sitOuts.length > 0) {
+      const sit = document.createElement('div');
+      sit.className = 'sit-out-row';
+      sit.textContent = `Sitting out: ${round.sitOuts.map(i => names[i]).join(', ')}`;
+      card.appendChild(sit);
+    }
+    el.appendChild(card);
+  }
+}
+
+function renderStats(schedule, names) {
+  const el = document.getElementById('stats');
+  const n = names.length;
+  const { tm, op, sitCount } = schedule;
+  const numGames = schedule.rounds.length;
+
+  let maxTm = 0, maxOp = 0;
+  for (let i = 0; i < n; i++)
+    for (let j = i + 1; j < n; j++) {
+      maxTm = Math.max(maxTm, tm[i][j]);
+      maxOp = Math.max(maxOp, op[i][j]);
+    }
+
+  const played = sitCount.map(s => numGames - s);
+  const minP = Math.min(...played), maxP = Math.max(...played);
+
+  const rows = names.map((name, i) =>
+    `<tr><td>${name}</td><td>${played[i]}</td><td>${sitCount[i]}</td></tr>`
+  ).join('');
+
+  el.innerHTML = `
+    <div class="stats-card">
+      <h3>Fairness Summary</h3>
+      <table class="stats-table">
+        <thead><tr><th>Player</th><th>Games Played</th><th>Sat Out</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div style="margin-top:16px">
+        <p class="stat-line">Games played range: ${minP === maxP ? minP : minP + '–' + maxP}${maxP - minP <= 1 ? ' (balanced)' : ''}</p>
+        <p class="stat-line">Max teammate repeats with same person: ${maxTm}</p>
+        <p class="stat-line">Max opponent repeats with same person: ${maxOp}</p>
+      </div>
+    </div>`;
+}
+
+// ─── Event Listeners ─────────────────────────────────────────
+
+const debouncedUpdate = debounce(updateChips, 300);
+$players.addEventListener('input', debouncedUpdate);
+$courts.addEventListener('input', debouncedUpdate);
+
+document.getElementById('generate-btn').addEventListener('click', generate);
+document.getElementById('back-btn').addEventListener('click', () => {
+  $results.classList.add('hidden');
+  $setup.classList.remove('hidden');
+});
+document.getElementById('regen-btn').addEventListener('click', regenerate);
+document.getElementById('print-btn').addEventListener('click', () => window.print());
+
+$players.focus();
+updateChips();
+</script>
+</body>
+</html>
