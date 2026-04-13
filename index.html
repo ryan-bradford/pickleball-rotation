@@ -326,36 +326,36 @@ textarea:focus, input:focus {
 
 /* ─── Print ────────────────────────────────── */
 @media print {
-  body { background: white !important; padding: 4px; font-size: 8pt; line-height: 1.1; }
+  body { background: white !important; padding: 4px; font-size: 13pt; line-height: 1.3; }
   #setup, .results-actions, .confetti, .toast { display: none !important; }
   .container { max-width: none; }
-  .results-header { margin-bottom: 4px; }
-  .results-header h2 { font-size: 1rem; margin-bottom: 2px; -webkit-text-fill-color: #333; color: #333; }
-  .results-meta { padding: 1px 8px; font-size: 0.7rem; }
+  .results-header { margin-bottom: 6px; }
+  .results-header h2 { font-size: 1.5rem; margin-bottom: 2px; -webkit-text-fill-color: #333; color: #333; }
+  .results-meta { padding: 2px 10px; font-size: 1rem; }
   .results-flavor { display: none; }
 
   /* Flatten rounds into compact text rows */
   .round-card { break-inside: avoid; border: none; border-bottom: 1px solid #ccc; box-shadow: none; margin-bottom: 0; animation: none; opacity: 1; border-radius: 0; }
-  .round-header { background: none !important; color: #333; padding: 3px 4px; font-size: 0.8rem; font-weight: 700; }
+  .round-header { background: none !important; color: #333; padding: 5px 4px; font-size: 1.1rem; font-weight: 700; }
   .round-header .mini-ball { display: none; }
-  .round-number { background: #333; color: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 0 5px; font-size: 0.7rem; border-radius: 3px; }
+  .round-number { background: #333; color: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 1px 7px; font-size: 1rem; border-radius: 3px; }
 
   /* Flatten court diagrams into single-line text */
-  .courts-grid { display: block; padding: 0 4px 3px; }
-  .court-block { display: flex; align-items: center; gap: 4px; margin-bottom: 0; }
-  .court-label { margin-bottom: 0; font-size: 0.7rem; white-space: nowrap; }
+  .courts-grid { display: block; padding: 0 4px 4px; }
+  .court-block { display: flex; align-items: center; gap: 5px; margin-bottom: 0; }
+  .court-label { margin-bottom: 0; font-size: 1rem; white-space: nowrap; }
   .court-label::before { display: none; }
   .court-diagram { display: flex; flex-direction: row; align-items: center; border: none; box-shadow: none; border-radius: 0; gap: 0; }
   .court-side { padding: 0 2px; background: transparent !important; display: inline-flex; }
   .side-top::after, .side-bottom::before { display: none; }
   .side-players { gap: 4px; flex-wrap: nowrap; }
-  .court-player { color: #333; text-shadow: none; background: none; font-size: 0.75rem; padding: 0; font-weight: 600; }
-  .court-amp { color: #888; font-size: 0.7rem; }
+  .court-player { color: #333; text-shadow: none; background: none; font-size: 1.05rem; padding: 0; font-weight: 600; }
+  .court-amp { color: #888; font-size: 1rem; }
   .net-bar { height: auto; background: transparent !important; box-shadow: none; width: auto; min-width: 0; }
-  .net-bar::before { content: 'vs'; position: static; background: none !important; box-shadow: none; font-weight: 700; color: #555; font-size: 0.7rem; letter-spacing: 0; padding: 0 4px; }
+  .net-bar::before { content: 'vs'; position: static; background: none !important; box-shadow: none; font-weight: 700; color: #555; font-size: 1rem; letter-spacing: 0; padding: 0 5px; }
 
-  .sideline-row { padding: 0 4px 3px; font-size: 0.7rem; border-top: none; background: none; color: #666; }
-  .sideline-label { font-size: 0.65rem; }
+  .sideline-row { padding: 0 4px 4px; font-size: 1rem; border-top: none; background: none; color: #666; }
+  .sideline-label { font-size: 0.95rem; }
   .sideline-label svg { display: none; }
 
   .stats-card { display: none !important; }
