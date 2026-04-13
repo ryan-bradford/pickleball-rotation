@@ -81,6 +81,13 @@ textarea:focus, input:focus {
   background: var(--court-blue); color: white; border-color: var(--court-blue);
   box-shadow: 0 2px 8px rgba(37,99,235,0.25);
 }
+.chip.maxed {
+  opacity: 0.4; cursor: not-allowed; pointer-events: none;
+}
+.chip-counter {
+  font-size: 0.78rem; color: var(--muted); margin-top: 6px; font-weight: 500;
+}
+.chip-counter .at-limit { color: var(--ball-dark); font-weight: 600; }
 
 /* ─── Buttons ──────────────────────────────── */
 .btn {
@@ -384,10 +391,12 @@ textarea:focus, input:focus {
         <div class="form-section">
           <label>Arriving late? <span class="form-hint">(they'll sit out round 1)</span></label>
           <div id="first-chips" class="chips"></div>
+          <div id="first-chips-counter" class="chip-counter"></div>
         </div>
         <div class="form-section">
           <label>Leaving early? <span class="form-hint">(they'll sit out the last round)</span></label>
           <div id="last-chips" class="chips"></div>
+          <div id="last-chips-counter" class="chip-counter"></div>
         </div>
       </div>
 
@@ -661,23 +670,56 @@ function updateChips() {
     return;
   }
   $sitSec.classList.remove('hidden');
-  renderChips('first-chips', names);
-  renderChips('last-chips', names);
+  renderChips('first-chips', names, sitOut);
+  renderChips('last-chips', names, sitOut);
 }
 
-function renderChips(id, names) {
+function renderChips(id, names, max) {
   const el = document.getElementById(id);
+  const counter = document.getElementById(id + '-counter');
   const prev = new Set([...el.querySelectorAll('.chip.selected')].map(c => c.textContent));
   el.innerHTML = '';
+
+  function updateState() {
+    const selected = el.querySelectorAll('.chip.selected').length;
+    const atLimit = selected >= max;
+    el.querySelectorAll('.chip:not(.selected)').forEach(c => {
+      c.classList.toggle('maxed', atLimit);
+    });
+    if (counter) {
+      if (selected > 0) {
+        const cls = atLimit ? ' class="at-limit"' : '';
+        counter.innerHTML = `<span${cls}>${selected} / ${max}</span> selected`;
+      } else {
+        counter.textContent = `Up to ${max} can sit out`;
+      }
+    }
+  }
+
   names.forEach((name, i) => {
+    const wasSelected = prev.has(name);
     const chip = document.createElement('button');
-    chip.className = 'chip' + (prev.has(name) ? ' selected' : '');
+    chip.className = 'chip' + (wasSelected ? ' selected' : '');
     chip.textContent = name;
     chip.type = 'button';
     chip.dataset.index = i;
-    chip.addEventListener('click', () => chip.classList.toggle('selected'));
+    chip.addEventListener('click', () => {
+      if (!chip.classList.contains('selected') && el.querySelectorAll('.chip.selected').length >= max) {
+        return; // at limit, block selection
+      }
+      chip.classList.toggle('selected');
+      updateState();
+    });
     el.appendChild(chip);
   });
+
+  // Trim excess selections if max decreased (e.g. user added more courts)
+  const selectedChips = [...el.querySelectorAll('.chip.selected')];
+  while (selectedChips.length > max) {
+    selectedChips.pop().classList.remove('selected');
+  }
+
+  updateState();
 }
 
 function getSelected(id) {
