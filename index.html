@@ -411,6 +411,11 @@ textarea:focus, input:focus {
         </div>
       </div>
 
+      <div class="form-section">
+        <label for="court-names">Court names <span class="form-hint">(optional, one per line)</span></label>
+        <textarea id="court-names" rows="2" placeholder="e.g. Main Court&#10;Back Court"></textarea>
+      </div>
+
       <div id="sit-out-section" class="hidden">
         <div class="form-section">
           <label>Arriving late? <span class="form-hint">(they'll sit out round 1)</span></label>
@@ -781,35 +786,40 @@ function generate() {
 
   const firstForced = getSelected('first-chips');
   const lastForced = getSelected('last-chips');
-  lastConfig = { names, courts, games, firstForced, lastForced };
+  const courtNames = parseNames(document.getElementById('court-names').value);
+  lastConfig = { names, courts, games, firstForced, lastForced, courtNames };
 
   const schedule = generateSchedule(names.length, courts, games, firstForced, lastForced);
   lastSchedule = schedule;
-  showResultsView(schedule, names, courts, games);
+  showResultsView(schedule, names, courts, games, courtNames);
   if (firstGenerate) { launchConfetti(); firstGenerate = false; }
 }
 
 function regenerate() {
   if (!lastConfig) return;
-  const { names, courts, games, firstForced, lastForced } = lastConfig;
+  const { names, courts, games, firstForced, lastForced, courtNames } = lastConfig;
   const schedule = generateSchedule(names.length, courts, games, firstForced, lastForced);
   lastSchedule = schedule;
-  showResultsView(schedule, names, courts, games);
+  showResultsView(schedule, names, courts, games, courtNames);
 }
 
-function showResultsView(schedule, names, courts, games) {
+function getCourtName(index, courtNames) {
+  return (courtNames && courtNames[index]) ? courtNames[index] : `Court ${index + 1}`;
+}
+
+function showResultsView(schedule, names, courts, games, courtNames) {
   $setup.classList.add('hidden');
   $results.classList.remove('hidden');
   document.getElementById('results-meta').textContent =
     `${names.length} Players \u2022 ${courts} Court${courts > 1 ? 's' : ''} \u2022 ${games} Game${games > 1 ? 's' : ''}`;
   document.getElementById('results-flavor').textContent =
     PB_PHRASES[Math.floor(Math.random() * PB_PHRASES.length)];
-  renderRounds(schedule, names);
+  renderRounds(schedule, names, courtNames);
   renderStats(schedule, names, games);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function renderRounds(schedule, names) {
+function renderRounds(schedule, names, courtNames) {
   const el = document.getElementById('rounds');
   const n = names.length;
   el.innerHTML = '';
@@ -834,7 +844,7 @@ function renderRounds(schedule, names) {
 
       const label = document.createElement('div');
       label.className = 'court-label';
-      label.textContent = `Court ${c + 1}`;
+      label.textContent = getCourtName(c, courtNames);
       block.appendChild(label);
 
       const diagram = document.createElement('div');
@@ -929,13 +939,13 @@ function renderStats(schedule, names, numGames) {
 
 function copyScheduleText() {
   if (!lastConfig || !lastSchedule) return;
-  const { names, courts, games } = lastConfig;
+  const { names, courts, games, courtNames } = lastConfig;
   let text = `PICKLEBALL ROTATIONS\n${names.length} Players | ${courts} Courts | ${games} Games\n`;
   text += '='.repeat(40) + '\n\n';
   lastSchedule.rounds.forEach((round, r) => {
     text += `ROUND ${r + 1}\n`;
     round.courts.forEach((ct, c) => {
-      text += `  Court ${c + 1}: ${ct.t1.map(i => names[i]).join(' & ')} vs ${ct.t2.map(i => names[i]).join(' & ')}\n`;
+      text += `  ${getCourtName(c, courtNames)}: ${ct.t1.map(i => names[i]).join(' & ')} vs ${ct.t2.map(i => names[i]).join(' & ')}\n`;
     });
     if (round.sitOuts.length > 0)
       text += `  Sideline: ${round.sitOuts.map(i => names[i]).join(', ')}\n`;
