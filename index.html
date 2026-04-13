@@ -412,8 +412,8 @@ textarea:focus, input:focus {
       </div>
 
       <div class="form-section">
-        <label for="court-names">Court names <span class="form-hint">(optional, one per line)</span></label>
-        <textarea id="court-names" rows="2" placeholder="e.g. Main Court&#10;Back Court"></textarea>
+        <label for="court-numbers">Court numbers <span class="form-hint">(optional, comma-separated, e.g. 3, 4)</span></label>
+        <input type="text" id="court-numbers" placeholder="e.g. 3, 4" inputmode="text">
       </div>
 
       <div id="sit-out-section" class="hidden">
@@ -786,40 +786,41 @@ function generate() {
 
   const firstForced = getSelected('first-chips');
   const lastForced = getSelected('last-chips');
-  const courtNames = parseNames(document.getElementById('court-names').value);
-  lastConfig = { names, courts, games, firstForced, lastForced, courtNames };
+  const courtNumbers = document.getElementById('court-numbers').value
+    .split(',').map(s => s.trim()).filter(s => s.length > 0);
+  lastConfig = { names, courts, games, firstForced, lastForced, courtNumbers };
 
   const schedule = generateSchedule(names.length, courts, games, firstForced, lastForced);
   lastSchedule = schedule;
-  showResultsView(schedule, names, courts, games, courtNames);
+  showResultsView(schedule, names, courts, games, courtNumbers);
   if (firstGenerate) { launchConfetti(); firstGenerate = false; }
 }
 
 function regenerate() {
   if (!lastConfig) return;
-  const { names, courts, games, firstForced, lastForced, courtNames } = lastConfig;
+  const { names, courts, games, firstForced, lastForced, courtNumbers } = lastConfig;
   const schedule = generateSchedule(names.length, courts, games, firstForced, lastForced);
   lastSchedule = schedule;
-  showResultsView(schedule, names, courts, games, courtNames);
+  showResultsView(schedule, names, courts, games, courtNumbers);
 }
 
-function getCourtName(index, courtNames) {
-  return (courtNames && courtNames[index]) ? courtNames[index] : `Court ${index + 1}`;
+function getCourtName(index, courtNumbers) {
+  return (courtNumbers && courtNumbers[index]) ? `Court ${courtNumbers[index]}` : `Court ${index + 1}`;
 }
 
-function showResultsView(schedule, names, courts, games, courtNames) {
+function showResultsView(schedule, names, courts, games, courtNumbers) {
   $setup.classList.add('hidden');
   $results.classList.remove('hidden');
   document.getElementById('results-meta').textContent =
     `${names.length} Players \u2022 ${courts} Court${courts > 1 ? 's' : ''} \u2022 ${games} Game${games > 1 ? 's' : ''}`;
   document.getElementById('results-flavor').textContent =
     PB_PHRASES[Math.floor(Math.random() * PB_PHRASES.length)];
-  renderRounds(schedule, names, courtNames);
+  renderRounds(schedule, names, courtNumbers);
   renderStats(schedule, names, games);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function renderRounds(schedule, names, courtNames) {
+function renderRounds(schedule, names, courtNumbers) {
   const el = document.getElementById('rounds');
   const n = names.length;
   el.innerHTML = '';
@@ -844,7 +845,7 @@ function renderRounds(schedule, names, courtNames) {
 
       const label = document.createElement('div');
       label.className = 'court-label';
-      label.textContent = getCourtName(c, courtNames);
+      label.textContent = getCourtName(c, courtNumbers);
       block.appendChild(label);
 
       const diagram = document.createElement('div');
@@ -939,13 +940,13 @@ function renderStats(schedule, names, numGames) {
 
 function copyScheduleText() {
   if (!lastConfig || !lastSchedule) return;
-  const { names, courts, games, courtNames } = lastConfig;
+  const { names, courts, games, courtNumbers } = lastConfig;
   let text = `PICKLEBALL ROTATIONS\n${names.length} Players | ${courts} Courts | ${games} Games\n`;
   text += '='.repeat(40) + '\n\n';
   lastSchedule.rounds.forEach((round, r) => {
     text += `ROUND ${r + 1}\n`;
     round.courts.forEach((ct, c) => {
-      text += `  ${getCourtName(c, courtNames)}: ${ct.t1.map(i => names[i]).join(' & ')} vs ${ct.t2.map(i => names[i]).join(' & ')}\n`;
+      text += `  ${getCourtName(c, courtNumbers)}: ${ct.t1.map(i => names[i]).join(' & ')} vs ${ct.t2.map(i => names[i]).join(' & ')}\n`;
     });
     if (round.sitOuts.length > 0)
       text += `  Sideline: ${round.sitOuts.map(i => names[i]).join(', ')}\n`;
